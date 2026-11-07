@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -600,4 +601,608 @@
     })();
 </script>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>西蒙说 · 记忆挑战</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #1a1f2e, #0b0e14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+            padding: 16px;
+        }
+
+        .game-container {
+            background: #121826;
+            border-radius: 64px 64px 48px 48px;
+            padding: 32px 32px 48px 32px;
+            box-shadow: 0 30px 40px rgba(0, 0, 0, 0.8), inset 0 2px 8px rgba(255, 255, 255, 0.08);
+            border: 2px solid #2e3b4e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: box-shadow 0.2s;
+        }
+
+        /* 状态面板 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 24px;
+            padding: 0 8px;
+            gap: 20px;
+        }
+
+        .score-box, .round-box {
+            background: #0b0f17;
+            padding: 10px 28px;
+            border-radius: 60px;
+            border: 2px solid #2e405b;
+            box-shadow: inset 0 4px 8px #00000060, 0 6px 0 #070a0f;
+            text-align: center;
+            min-width: 110px;
+        }
+
+        .score-box span, .round-box span {
+            display: block;
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #b8e2ff;
+            text-shadow: 0 0 12px #3d9eff;
+            line-height: 1.2;
+        }
+
+        .score-box label, .round-box label {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: #8ca9c7;
+            text-transform: uppercase;
+        }
+
+        /* 中央大按钮——开始/重玩 */
+        .start-btn {
+            background: #2e5e8c;
+            border: none;
+            color: white;
+            font-size: 1.6rem;
+            font-weight: bold;
+            padding: 12px 36px;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #142433, 0 10px 20px #00000080;
+            transition: all 0.07s linear;
+            letter-spacing: 3px;
+            font-family: inherit;
+            border: 1px solid #5d8fc9;
+            text-shadow: 0 2px 4px black;
+            margin-bottom: 16px;
+        }
+
+        .start-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #142433, 0 8px 16px #00000080;
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #142433;
+            cursor: not-allowed;
+        }
+
+        /* 西蒙说 四色按钮面板 */
+        .simon-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            background: #0a0e14;
+            padding: 24px;
+            border-radius: 60px;
+            box-shadow: inset 0 0 30px #000000, 0 16px 24px #00000080;
+            border: 3px solid #273645;
+            margin-bottom: 8px;
+            transition: filter 0.2s;
+        }
+
+        .pad {
+            width: 130px;
+            height: 130px;
+            border-radius: 28px;
+            cursor: pointer;
+            transition: all 0.08s ease;
+            box-shadow: 0 8px 0 #00000060, 0 0 0 2px #00000040 inset;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            filter: brightness(0.65);
+            position: relative;
+        }
+
+        /* 各颜色基础色调 */
+        .pad.green {
+            background: #3ba55d;
+        }
+
+        .pad.red {
+            background: #d9534f;
+        }
+
+        .pad.yellow {
+            background: #f0c24b;
+        }
+
+        .pad.blue {
+            background: #3d8fd9;
+        }
+
+        /* 点亮状态（高亮） */
+        .pad.active {
+            filter: brightness(1.6) saturate(1.4);
+            box-shadow: 0 0 24px currentColor, 0 6px 0 #00000060, 0 0 0 3px white inset;
+            transform: scale(0.96);
+        }
+
+        /* 给每个颜色定义 currentColor 用于发光 */
+        .pad.green {
+            color: #5fdd7a;
+        }
+
+        .pad.red {
+            color: #ff6b68;
+        }
+
+        .pad.yellow {
+            color: #ffe073;
+        }
+
+        .pad.blue {
+            color: #6db4ff;
+        }
+
+        /* 禁用点击（播放序列/游戏结束） */
+        .simon-board.disabled .pad {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* 提示信息 */
+        .message {
+            margin-top: 16px;
+            font-size: 1.2rem;
+            color: #acc9e5;
+            background: #0a1018;
+            padding: 10px 32px;
+            border-radius: 60px;
+            border: 1px solid #2a4055;
+            box-shadow: inset 0 2px 6px #000000, 0 4px 6px #00000040;
+            letter-spacing: 0.5px;
+            text-align: center;
+            min-height: 3.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            width: 100%;
+        }
+
+        .message.error {
+            color: #ff8a8a;
+            text-shadow: 0 0 8px #ff3b3b;
+        }
+
+        .message.success {
+            color: #a5e0a5;
+            text-shadow: 0 0 8px #34c759;
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 24px 16px 32px;
+                border-radius: 40px;
+            }
+
+            .pad {
+                width: 100px;
+                height: 100px;
+                border-radius: 22px;
+            }
+
+            .simon-board {
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .start-btn {
+                font-size: 1.3rem;
+                padding: 10px 28px;
+            }
+
+            .score-box span, .round-box span {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .pad {
+                width: 75px;
+                height: 75px;
+                border-radius: 18px;
+            }
+
+            .status-bar {
+                gap: 8px;
+            }
+
+            .score-box, .round-box {
+                padding: 6px 16px;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <!-- 分数 / 轮次 -->
+    <div class="status-bar">
+        <div class="score-box">
+            <label>分数</label>
+            <span id="scoreDisplay">0</span>
+        </div>
+        <div class="round-box">
+            <label>轮次</label>
+            <span id="roundDisplay">0</span>
+        </div>
+    </div>
+
+    <!-- 中央开始按钮 -->
+    <button class="start-btn" id="startBtn">开始</button>
+
+    <!-- 四色按钮面板 -->
+    <div class="simon-board" id="simonBoard">
+        <div class="pad green" data-index="0" id="padGreen"></div>
+        <div class="pad red" data-index="1" id="padRed"></div>
+        <div class="pad yellow" data-index="2" id="padYellow"></div>
+        <div class="pad blue" data-index="3" id="padBlue"></div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="message" id="message">点击“开始”来挑战记忆力</div>
+</div>
+
+<script>
+    (function(){
+        // ---------- 游戏配置 ----------
+        const PADS = [
+            { id: 'padGreen', color: '#3ba55d', name: '绿' },
+            { id: 'padRed', color: '#d9534f', name: '红' },
+            { id: 'padYellow', color: '#f0c24b', name: '黄' },
+            { id: 'padBlue', color: '#3d8fd9', name: '蓝' }
+        ];
+
+        // 音效相关（使用 Web Audio API 生成简单音调，不依赖外部文件）
+        let audioCtx = null;
+
+        // DOM 元素
+        const startBtn = document.getElementById('startBtn');
+        const simonBoard = document.getElementById('simonBoard');
+        const messageEl = document.getElementById('message');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const roundDisplay = document.getElementById('roundDisplay');
+        const padElements = [
+            document.getElementById('padGreen'),
+            document.getElementById('padRed'),
+            document.getElementById('padYellow'),
+            document.getElementById('padBlue')
+        ];
+
+        // 游戏状态
+        let sequence = [];              // 当前需要记忆的序列 (0-3)
+        let userSequence = [];          // 玩家已按下的序列
+        let round = 0;                 // 当前轮次 (从1开始)
+        let score = 0;                 // 分数 (每成功一轮增加)
+        let isPlaying = false;         // 是否处于游戏进行中
+        let isShowingSequence = false; // 是否正在播放序列 (期间禁止点击)
+        let canPlayerClick = false;    // 是否允许玩家点击 (播放完序列后)
+        let gameInterval = null;       // 用于清理定时器
+        let playbackTimeout = null;
+
+        // ---------- 音效 (简单振荡器) ----------
+        function initAudio() {
+            if (audioCtx) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.warn('Web Audio API 不支持，无音效');
+            }
+        }
+
+        function playTone(index) {
+            if (!audioCtx) return;
+            // 确保上下文已激活
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const frequencies = [329.63, 261.63, 392.00, 220.00]; // E4, C4, G4, A3
+            const freq = frequencies[index] || 440;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.value = 0.15;
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // 错误音效
+        function playErrorSound() {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.value = 120;
+            gain.gain.value = 0.2;
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // ---------- 辅助函数 ----------
+        function updateUI() {
+            scoreDisplay.textContent = score;
+            roundDisplay.textContent = round;
+        }
+
+        // 点亮一个按钮（持续 duration 毫秒）
+        function flashPad(index, duration = 300) {
+            const pad = padElements[index];
+            if (!pad) return;
+            pad.classList.add('active');
+            playTone(index);
+            setTimeout(() => {
+                pad.classList.remove('active');
+            }, duration);
+        }
+
+        // 播放序列（依次闪烁）
+        function playSequence(seq) {
+            if (!seq || seq.length === 0) return;
+
+            isShowingSequence = true;
+            canPlayerClick = false;
+            simonBoard.classList.add('disabled'); // 禁止点击
+            messageEl.textContent = '看仔细...';
+            messageEl.classList.remove('error', 'success');
+
+            // 清除之前的播放定时器
+            if (playbackTimeout) {
+                clearTimeout(playbackTimeout);
+                playbackTimeout = null;
+            }
+
+            let i = 0;
+            const intervalTime = 600; // 每个闪烁间隔
+
+            function playNext() {
+                if (i >= seq.length) {
+                    // 序列播放完毕，允许玩家点击
+                    isShowingSequence = false;
+                    canPlayerClick = true;
+                    simonBoard.classList.remove('disabled');
+                    messageEl.textContent = '轮到你了！';
+                    messageEl.classList.remove('error', 'success');
+                    return;
+                }
+
+                const padIndex = seq[i];
+                flashPad(padIndex, 350);
+                i++;
+
+                // 设置下一个闪烁
+                playbackTimeout = setTimeout(playNext, intervalTime);
+            }
+
+            // 延迟一点开始，让用户有准备
+            playbackTimeout = setTimeout(playNext, 500);
+        }
+
+        // 生成下一个序列（在现有基础上追加一个随机数）
+        function extendSequence() {
+            const nextIndex = Math.floor(Math.random() * 4);
+            sequence.push(nextIndex);
+            return nextIndex;
+        }
+
+        // 重置游戏状态（清空序列、分数、轮次）
+        function resetGameState() {
+            if (playbackTimeout) {
+                clearTimeout(playbackTimeout);
+                playbackTimeout = null;
+            }
+            if (gameInterval) {
+                clearInterval(gameInterval);
+                gameInterval = null;
+            }
+            sequence = [];
+            userSequence = [];
+            round = 0;
+            score = 0;
+            isPlaying = false;
+            isShowingSequence = false;
+            canPlayerClick = false;
+            simonBoard.classList.remove('disabled');
+            // 移除所有高亮
+            padElements.forEach(p => p.classList.remove('active'));
+            updateUI();
+            messageEl.textContent = '点击“开始”来挑战记忆力';
+            messageEl.classList.remove('error', 'success');
+            startBtn.disabled = false;
+            startBtn.textContent = '开始';
+        }
+
+        // 开始新游戏（重置并启动第一轮）
+        function startNewGame() {
+            resetGameState();
+            initAudio();
+
+            isPlaying = true;
+            startBtn.disabled = true;  // 游戏进行中禁用开始按钮
+            startBtn.textContent = '进行中...';
+
+            // 第一轮: 生成一个随机序列并播放
+            round = 1;
+            sequence = [];
+            extendSequence(); // 序列长度为1
+            updateUI();
+
+            // 播放序列
+            playSequence(sequence);
+        }
+
+        // 处理玩家点击按钮
+        function handlePadClick(index) {
+            if (!isPlaying || !canPlayerClick || isShowingSequence) {
+                return; // 不允许点击
+            }
+
+            // 点亮按钮 + 音效
+            flashPad(index, 200);
+            playTone(index); // flashPad 里已经调用 playTone，但为了确保，再调用一次会双音，改一下：flashPad里已播放，移除这里的。
+            // 但flashPad里面播放了，所以这里不用再调用。为了万一，我们修改flashPad不播放？不，flashPad里播放了。
+            // 为了不重复，注释掉下一行。
+            // playTone(index); 
+
+            // 记录玩家输入
+            userSequence.push(index);
+
+            // 检查当前输入是否与序列对应位置匹配
+            const currentStep = userSequence.length - 1;
+            if (userSequence[currentStep] !== sequence[currentStep]) {
+                // 错误！游戏结束
+                playErrorSound();
+                messageEl.textContent = '❌ 错了！点击“开始”再来一次';
+                messageEl.classList.add('error');
+                messageEl.classList.remove('success');
+                isPlaying = false;
+                canPlayerClick = false;
+                simonBoard.classList.add('disabled');
+                startBtn.disabled = false;
+                startBtn.textContent = '重新开始';
+                // 移除高亮
+                padElements.forEach(p => p.classList.remove('active'));
+                return;
+            }
+
+            // 如果玩家完成了整个序列
+            if (userSequence.length === sequence.length) {
+                // 成功！加分，进入下一轮
+                score += round * 10; // 分数随轮次增加而增多
+                round++;
+                updateUI();
+                messageEl.textContent = '✅ 正确！下一个...';
+                messageEl.classList.add('success');
+                messageEl.classList.remove('error');
+
+                // 禁止点击，准备播放下一轮序列
+                canPlayerClick = false;
+                simonBoard.classList.add('disabled');
+                userSequence = [];
+
+                // 扩展序列
+                extendSequence();
+                // 播放新序列
+                // 短暂延迟后播放，让玩家有点缓冲
+                if (playbackTimeout) clearTimeout(playbackTimeout);
+                playbackTimeout = setTimeout(() => {
+                    playSequence(sequence);
+                }, 600);
+            }
+        }
+
+        // ---------- 事件绑定 ----------
+        function bindEvents() {
+            // 开始按钮
+            startBtn.addEventListener('click', () => {
+                // 如果游戏正在进行中，点击则重置并重新开始（按钮会被禁用，正常不会触发）
+                if (isPlaying && !startBtn.disabled) {
+                    // 特殊情况：游戏结束但按钮可点，直接重置
+                }
+                startNewGame();
+            });
+
+            // 为每个 Pad 绑定点击事件
+            padElements.forEach((pad, idx) => {
+                pad.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // 如果当前不允许点击，直接返回
+                    handlePadClick(idx);
+                });
+
+                // 添加触摸支持 (移动端)
+                pad.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // 防止双击缩放
+                    e.stopPropagation();
+                    handlePadClick(idx);
+                }, { passive: false });
+            });
+
+            // 键盘支持: 1,2,3,4 对应绿、红、黄、蓝
+            window.addEventListener('keydown', (e) => {
+                if (!isPlaying || !canPlayerClick) return;
+
+                const keyMap = {
+                    '1': 0, // 绿
+                    '2': 1, // 红
+                    '3': 2, // 黄
+                    '4': 3  // 蓝
+                };
+                const idx = keyMap[e.key];
+                if (idx !== undefined) {
+                    e.preventDefault();
+                    // 模拟点击
+                    handlePadClick(idx);
+                }
+            });
+        }
+
+        // ---------- 页面加载初始化 ----------
+        window.addEventListener('load', () => {
+            resetGameState();
+            bindEvents();
+
+            // 预初始化音频上下文（等待用户手势）
+            // 在第一次点击开始按钮时初始化
+        });
+
+        // 清理定时器（可选）
+        window.addEventListener('beforeunload', () => {
+            if (playbackTimeout) clearTimeout(playbackTimeout);
+            if (gameInterval) clearInterval(gameInterval);
+        });
+
+    })();
+</script>
+</body>
+>>>>>>> 8958af02d1bb31cb7c52da4d2304b92c9f4bd070
 </html>
